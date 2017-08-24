@@ -3,8 +3,8 @@ jQuery(document).ready ($) ->
   Reveal.addEventListener 'ready', ->
     CwRelativePathResolver.resolve()
     $('.fancybox').fancybox selector: '.fancybox'
+    $('body').removeClass 'loading'
     $('.loader').fadeOut(->
-      $('body').removeClass 'loading'
       $('.reveal .slides').fadeIn()
     )
 

@@ -5,8 +5,8 @@
       $('.fancybox').fancybox({
         selector: '.fancybox'
       });
+      $('body').removeClass('loading');
       return $('.loader').fadeOut(function() {
-        $('body').removeClass('loading');
         return $('.reveal .slides').fadeIn();
       });
     });
