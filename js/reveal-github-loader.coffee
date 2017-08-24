@@ -48,11 +48,13 @@ class PresentationTrack
     unless @indexFileLine #root node
       return content
 
-    str = "<section>"
+    str = ""
+    str = "<section>" if @indexFileLine.depth() == 0
 
     if @indexFileLine.isDirectory()
       str+="<section data-markdown># #{@indexFileLine.name()}"
 
+      console.log PresentationTrack.sectionCounter
       if PresentationTrack.sectionCounter == 0
         str+= "\n\n source: [github](#{@loader.readme})"
         str+= "\n\n pdf (only in chrome): [open](#{window.location.href.split("#")[0]}?print-pdf)"
@@ -64,7 +66,8 @@ class PresentationTrack
       str+="<section data-markdown='#{@remotePath()}' data-remote-path='#{@remotePath()}'></section>"
 
     str+= content
-    str+= "</section>"
+
+    str+= "</section>" if @indexFileLine.depth() == 0
 
     str
 

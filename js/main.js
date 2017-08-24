@@ -10,11 +10,10 @@
         return $('.reveal .slides').fadeIn();
       });
     });
-    return new CwRevealLoader({
+    return new CwRevealLoader($.extend(true, {
       selector: '.reveal .slides',
-      presentation: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/de',
-      readme: 'https://github.com/easy-presentations/cw-wordpress-divi/blob/master/de/README.md',
       reveal: {
+        autoSlideMethod: Reveal.navigateNext,
         dependencies: [
           {
             src: 'lib/js/classList.js',
@@ -47,44 +46,9 @@
             src: 'plugin/math/math.js',
             async: true
           }
-        ],
-        controls: true,
-        progress: true,
-        defaultTiming: 120,
-        zoomKey: 'shift',
-        slideNumber: 'h.v',
-        pdfMaxPagesPerSlide: 1,
-        showSlideNumber: 'all',
-        history: true,
-        keyboard: true,
-        overview: true,
-        center: true,
-        touch: true,
-        loop: false,
-        rtl: false,
-        shuffle: false,
-        fragments: true,
-        embedded: false,
-        help: true,
-        showNotes: false,
-        autoPlayMedia: null,
-        autoSlide: 0,
-        autoSlideStoppable: true,
-        autoSlideMethod: Reveal.navigateNext,
-        mouseWheel: false,
-        hideAddressBar: true,
-        previewLinks: false,
-        transition: 'convex',
-        transitionSpeed: 'default',
-        backgroundTransition: 'fade',
-        viewDistance: 3,
-        parallaxBackgroundImage: '',
-        parallaxBackgroundSize: '',
-        parallaxBackgroundHorizontal: null,
-        parallaxBackgroundVertical: null,
-        display: 'block'
+        ]
       }
-    });
+    }, window.cwRevealConfig));
   });
 
 }).call(this);

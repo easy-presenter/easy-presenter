@@ -87,9 +87,13 @@
       if (!this.indexFileLine) {
         return content;
       }
-      str = "<section>";
+      str = "";
+      if (this.indexFileLine.depth() === 0) {
+        str = "<section>";
+      }
       if (this.indexFileLine.isDirectory()) {
         str += "<section data-markdown># " + (this.indexFileLine.name());
+        console.log(PresentationTrack.sectionCounter);
         if (PresentationTrack.sectionCounter === 0) {
           str += "\n\n source: [github](" + this.loader.readme + ")";
           str += "\n\n pdf (only in chrome): [open](" + (window.location.href.split("#")[0]) + "?print-pdf)";
@@ -100,7 +104,9 @@
         str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
       str += content;
-      str += "</section>";
+      if (this.indexFileLine.depth() === 0) {
+        str += "</section>";
+      }
       return str;
     };
 
