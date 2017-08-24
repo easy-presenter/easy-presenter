@@ -27,6 +27,7 @@ class IndexFileLine
 
 
 class PresentationTrack
+  @sectionCounter: 0
   constructor: (@loader, @indexFileLine=null) ->
     @children = []
 
@@ -50,10 +51,17 @@ class PresentationTrack
     str = "<section>"
 
     if @indexFileLine.isDirectory()
-      str+="<section data-markdown>#{@indexFileLine.name()}</section>"
+      str+="<section data-markdown># #{@indexFileLine.name()}"
 
+      if PresentationTrack.sectionCounter == 0
+        str+= "\n\n source: [github](#{@loader.readme})"
+        str+= "\n\n pdf (only in chrome): [open](#{window.location.href.split("#")[0]}?print-pdf)"
+
+      PresentationTrack.sectionCounter++
+
+      str+="</section>"
     else
-      str+="<section data-markdown='#{@remotePath()}'></section>"
+      str+="<section data-markdown='#{@remotePath()}' data-remote-path='#{@remotePath()}'></section>"
 
     str+= content
     str+= "</section>"
@@ -89,6 +97,7 @@ class PresentationComposer
 class @CwRevealLoader
   constructor: (@config) ->
     @src       = @config.presentation
+    @readme    = @config.readme
     @container = $(@config.selector)
     @composer  = new PresentationComposer(@)
     @bootstrap()
@@ -108,3 +117,38 @@ class @CwRevealLoader
 
   initializeReveal: =>
     Reveal.initialize @config.reveal
+
+class @CwRelativePathResolver
+  @resolve: ->
+    slides = $('.reveal .slides section')
+
+    $.each slides, (index, slide) ->
+      images = $('img', slide)
+      $.each images, (index, image) ->
+        console.log image
+        $image = $(image)
+        relativeSource = $image.attr('src')
+        $parentSection = $image.closest('section')
+        $parentSection.addClass 'with-image'
+        if relativeSource.indexOf('./') == 0
+          sectionSource = $parentSection.data('remote-path')
+          tmp = sectionSource.split('/')
+          tmp.pop()
+          sectionBasePath = tmp.join('/')
+          absolutePath = sectionBasePath + '/' + relativeSource.slice(2)
+          $image.attr 'src', absolutePath
+          $imageLink = $("<a class='fancybox' href='#{absolutePath}'/>")
+          $image.wrap($imageLink);
+
+      links = $('a', slide)
+      $.each links, (index, links) ->
+        $links = $(links)
+        relativeSource = $links.attr('href')
+        $parentSection = $links.closest('section')
+        if relativeSource.indexOf('./') == 0
+          sectionSource = $parentSection.data('remote-path')
+          tmp = sectionSource.split('/')
+          tmp.pop()
+          sectionBasePath = tmp.join('/')
+          absolutePath = sectionBasePath + '/' + relativeSource.slice(2)
+          $links.attr 'href', absolutePath

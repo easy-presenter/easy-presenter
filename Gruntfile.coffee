@@ -93,18 +93,24 @@ module.exports = (grunt) ->
           sourceMap: true
           sourceMapDir: 'js/maps/'
 
-        files: 'js/reveal-github-loader.js': 'js/reveal-github-loader.coffee'
+        files:
+          'js/reveal-github-loader.js': 'js/reveal-github-loader.coffee'
+          'js/main.js': 'js/main.coffee'
 
     watch:
       coffee:
-        files: [ 'js/reveal-github-loader.coffee' ]
+        files: [
+          'js/reveal-github-loader.coffee'
+          'js/main.coffee'
+        ]
         tasks: 'coffee'
 
       js:
         files: [
-          'Gruntfile.js'
+          'Gruntfile.coffee'
           'js/reveal.js'
           'js/reveal-github-loader.js'
+          'js/main.js'
         ]
         tasks: 'js'
 

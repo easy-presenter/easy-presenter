@@ -54,6 +54,8 @@
   })();
 
   PresentationTrack = (function() {
+    PresentationTrack.sectionCounter = 0;
+
     function PresentationTrack(loader, indexFileLine) {
       this.loader = loader;
       this.indexFileLine = indexFileLine != null ? indexFileLine : null;
@@ -87,9 +89,15 @@
       }
       str = "<section>";
       if (this.indexFileLine.isDirectory()) {
-        str += "<section data-markdown>" + (this.indexFileLine.name()) + "</section>";
+        str += "<section data-markdown># " + (this.indexFileLine.name());
+        if (PresentationTrack.sectionCounter === 0) {
+          str += "\n\n source: [github](" + this.loader.readme + ")";
+          str += "\n\n pdf (only in chrome): [open](" + (window.location.href.split("#")[0]) + "?print-pdf)";
+        }
+        PresentationTrack.sectionCounter++;
+        str += "</section>";
       } else {
-        str += "<section data-markdown='" + (this.remotePath()) + "'></section>";
+        str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
       str += content;
       str += "</section>";
@@ -145,6 +153,7 @@
       this.loadPresentation = bind(this.loadPresentation, this);
       this.bootstrap = bind(this.bootstrap, this);
       this.src = this.config.presentation;
+      this.readme = this.config.readme;
       this.container = $(this.config.selector);
       this.composer = new PresentationComposer(this);
       this.bootstrap();
@@ -171,6 +180,55 @@
     };
 
     return CwRevealLoader;
+
+  })();
+
+  this.CwRelativePathResolver = (function() {
+    function CwRelativePathResolver() {}
+
+    CwRelativePathResolver.resolve = function() {
+      var slides;
+      slides = $('.reveal .slides section');
+      return $.each(slides, function(index, slide) {
+        var images, links;
+        images = $('img', slide);
+        $.each(images, function(index, image) {
+          var $image, $imageLink, $parentSection, absolutePath, relativeSource, sectionBasePath, sectionSource, tmp;
+          console.log(image);
+          $image = $(image);
+          relativeSource = $image.attr('src');
+          $parentSection = $image.closest('section');
+          $parentSection.addClass('with-image');
+          if (relativeSource.indexOf('./') === 0) {
+            sectionSource = $parentSection.data('remote-path');
+            tmp = sectionSource.split('/');
+            tmp.pop();
+            sectionBasePath = tmp.join('/');
+            absolutePath = sectionBasePath + '/' + relativeSource.slice(2);
+            $image.attr('src', absolutePath);
+            $imageLink = $("<a class='fancybox' href='" + absolutePath + "'/>");
+            return $image.wrap($imageLink);
+          }
+        });
+        links = $('a', slide);
+        return $.each(links, function(index, links) {
+          var $links, $parentSection, absolutePath, relativeSource, sectionBasePath, sectionSource, tmp;
+          $links = $(links);
+          relativeSource = $links.attr('href');
+          $parentSection = $links.closest('section');
+          if (relativeSource.indexOf('./') === 0) {
+            sectionSource = $parentSection.data('remote-path');
+            tmp = sectionSource.split('/');
+            tmp.pop();
+            sectionBasePath = tmp.join('/');
+            absolutePath = sectionBasePath + '/' + relativeSource.slice(2);
+            return $links.attr('href', absolutePath);
+          }
+        });
+      });
+    };
+
+    return CwRelativePathResolver;
 
   })();
 
