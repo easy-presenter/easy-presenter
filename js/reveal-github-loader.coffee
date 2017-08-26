@@ -113,11 +113,13 @@ class @CwRevealLoader
 
   loadPresentation: (src) =>
     @startSlide = ''
-    $.ajax
-      url: "#{src}/index.md"
-      success: (data) =>
-        data = "- [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
-        @renderPresentation(data)
+    setTimeout( =>
+      $.ajax
+        url: "#{src}/index.md"
+        success: (data) =>
+          data = "- [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
+          @renderPresentation(data)
+    , 0)
 
   renderPresentation: (data) =>
     @composer.compose(data)

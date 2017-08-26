@@ -174,15 +174,17 @@
 
     CwRevealLoader.prototype.loadPresentation = function(src) {
       this.startSlide = '';
-      return $.ajax({
-        url: src + "/index.md",
-        success: (function(_this) {
-          return function(data) {
-            data = "- [00_overview](./00_overview.md) \n\n " + data;
-            return _this.renderPresentation(data);
-          };
-        })(this)
-      });
+      return setTimeout((function(_this) {
+        return function() {
+          return $.ajax({
+            url: src + "/index.md",
+            success: function(data) {
+              data = "- [00_overview](./00_overview.md) \n\n " + data;
+              return _this.renderPresentation(data);
+            }
+          });
+        };
+      })(this), 0);
     };
 
     CwRevealLoader.prototype.renderPresentation = function(data) {
