@@ -1,6 +1,6 @@
 class IndexFileLine
   @nameRegexp: new RegExp('\\[([^\\]]*)\\]')
-  @pathRegexp: new RegExp('\\(([^\\)]*)\\)')
+  @pathRegexp: new RegExp('.*\\]\\(([^\\)]*)\\)')
 
   constructor: (@line) ->
 
@@ -8,6 +8,7 @@ class IndexFileLine
     @path().slice(-3) != '.md'
 
   name: =>
+    console.log @line
     res = @line.match(IndexFileLine.nameRegexp)
     return @line if !res || res.length < 2
     res[1]
@@ -54,7 +55,16 @@ class PresentationTrack
     str = "<section>" if @indexFileLine.isRoot()
 
     if @indexFileLine.isDirectory()
-      str+="<section data-markdown># #{@indexFileLine.name()} </section>"
+      try
+        console.log @indexFileLine.line, @indexFileLine.path()
+        $.ajax
+          url: "#{@remotePath()}/00_overview.md"
+          async: false
+          success: (data) =>
+            str+="<section data-markdown>#{data} </section>"
+      catch e
+        str+="<section data-markdown># #{@indexFileLine.name()} </section>"
+
     else
       str+="<section data-markdown='#{@remotePath()}' data-remote-path='#{@remotePath()}'></section>"
 

@@ -5,7 +5,7 @@
   IndexFileLine = (function() {
     IndexFileLine.nameRegexp = new RegExp('\\[([^\\]]*)\\]');
 
-    IndexFileLine.pathRegexp = new RegExp('\\(([^\\)]*)\\)');
+    IndexFileLine.pathRegexp = new RegExp('.*\\]\\(([^\\)]*)\\)');
 
     function IndexFileLine(line1) {
       this.line = line1;
@@ -23,6 +23,7 @@
 
     IndexFileLine.prototype.name = function() {
       var res;
+      console.log(this.line);
       res = this.line.match(IndexFileLine.nameRegexp);
       if (!res || res.length < 2) {
         return this.line;
@@ -86,7 +87,7 @@
     };
 
     PresentationTrack.prototype.renderSection = function(content) {
-      var str;
+      var e, error, str;
       if (!this.indexFileLine) {
         return content;
       }
@@ -95,7 +96,21 @@
         str = "<section>";
       }
       if (this.indexFileLine.isDirectory()) {
-        str += "<section data-markdown># " + (this.indexFileLine.name()) + " </section>";
+        try {
+          console.log(this.indexFileLine.line, this.indexFileLine.path());
+          $.ajax({
+            url: (this.remotePath()) + "/00_overview.md",
+            async: false,
+            success: (function(_this) {
+              return function(data) {
+                return str += "<section data-markdown>" + data + " </section>";
+              };
+            })(this)
+          });
+        } catch (error) {
+          e = error;
+          str += "<section data-markdown># " + (this.indexFileLine.name()) + " </section>";
+        }
       } else {
         str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
