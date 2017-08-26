@@ -3,9 +3,9 @@
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   IndexFileLine = (function() {
-    IndexFileLine.nameRegexp = new RegExp('\\[(.*)\\]');
+    IndexFileLine.nameRegexp = new RegExp('\\[([^\\]]*)\\]');
 
-    IndexFileLine.pathRegexp = new RegExp('\\((.*)\\)');
+    IndexFileLine.pathRegexp = new RegExp('\\(([^\\)]*)\\)');
 
     function IndexFileLine(line1) {
       this.line = line1;
@@ -59,8 +59,6 @@
   })();
 
   PresentationTrack = (function() {
-    PresentationTrack.sectionCounter = 0;
-
     function PresentationTrack(loader, indexFileLine) {
       this.loader = loader;
       this.indexFileLine = indexFileLine != null ? indexFileLine : null;
@@ -97,16 +95,7 @@
         str = "<section>";
       }
       if (this.indexFileLine.isDirectory()) {
-        try {
-          ({});
-        } catch (undefined) {}
-        str += "<section data-markdown># " + (this.indexFileLine.name());
-        if (PresentationTrack.sectionCounter === 0) {
-          str += "\n\n source: [github](" + this.loader.readme + ")";
-          str += "\n\n pdf (only in chrome): [open](" + (window.location.href.split("#")[0]) + "?print-pdf)";
-        }
-        PresentationTrack.sectionCounter++;
-        str += "</section>";
+        str += "<section data-markdown># " + (this.indexFileLine.name()) + " </section>";
       } else {
         str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
@@ -140,7 +129,6 @@
         }
         line = new IndexFileLine(line);
         track = new PresentationTrack(this.loader, line);
-        console.log(line.depth(), line.path());
         if (line.isRoot()) {
           this.rootTrack.append(track);
           lastRoot = track;
@@ -179,7 +167,7 @@
           return $.ajax({
             url: src + "/index.md",
             success: function(data) {
-              data = "- [00_overview](./00_overview.md) \n\n " + data;
+              data = "  - [00_overview](./00_overview.md) \n\n " + data;
               return _this.renderPresentation(data);
             }
           });
@@ -211,7 +199,6 @@
         images = $('img', slide);
         $.each(images, function(index, image) {
           var $image, $imageLink, $parentSection, absolutePath, relativeSource, sectionBasePath, sectionSource, tmp;
-          console.log(image);
           $image = $(image);
           relativeSource = $image.attr('src');
           $parentSection = $image.closest('section');
@@ -243,6 +230,10 @@
           }
         });
       });
+    };
+
+    CwRelativePathResolver.appendSources = function() {
+      return $('section > section', '.reveal .slides').first().append(("<ul><li>source: <a href='" + cwRevealConfig.src + "' target='_blank'>github</a></li>") + ("<li>pdf <small>(Chrome)</small>: <a href='" + (window.location.href.split("#")[0]) + "?print-pdf' target='_blank'>pdf</a></li></ul>"));
     };
 
     return CwRelativePathResolver;

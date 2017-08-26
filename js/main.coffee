@@ -2,6 +2,7 @@ jQuery(document).ready ($) ->
 
   Reveal.addEventListener 'ready', ->
     CwRelativePathResolver.resolve()
+    CwRelativePathResolver.appendSources()
     $('.fancybox').fancybox selector: '.fancybox'
     $('body').removeClass 'loading'
     $('.loader').fadeOut(->

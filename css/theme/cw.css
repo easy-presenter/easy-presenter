@@ -165,20 +165,21 @@ img {
       display: inline-block;
       font-size: 0.6em;
       line-height: 1.2em;
-      vertical-align: top; }
+      vertical-align: middle; }
       .reveal .slides > section small * {
-        vertical-align: top; }
+        vertical-align: middle; }
     .reveal .slides > section a {
-      color: #8b743d;
+      color: #ffb01e;
       text-decoration: none;
       -webkit-transition: color .15s ease;
       -moz-transition: color .15s ease;
       transition: color .15s ease;
       outline: none; }
       .reveal .slides > section a:hover {
-        color: #c0a86e;
+        color: #ffb01e;
         text-shadow: none;
-        border: none; }
+        border: none;
+        text-decoration: underline; }
     .reveal .slides > section .roll span:after {
       color: #fff;
       background: #564826; }

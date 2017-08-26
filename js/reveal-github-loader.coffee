@@ -1,6 +1,6 @@
 class IndexFileLine
-  @nameRegexp: new RegExp('\\[(.*)\\]')
-  @pathRegexp: new RegExp('\\((.*)\\)')
+  @nameRegexp: new RegExp('\\[([^\\]]*)\\]')
+  @pathRegexp: new RegExp('\\(([^\\)]*)\\)')
 
   constructor: (@line) ->
 
@@ -30,7 +30,6 @@ class IndexFileLine
 
 
 class PresentationTrack
-  @sectionCounter: 0
   constructor: (@loader, @indexFileLine=null) ->
     @children = []
 
@@ -55,18 +54,7 @@ class PresentationTrack
     str = "<section>" if @indexFileLine.isRoot()
 
     if @indexFileLine.isDirectory()
-      try{
-
-      }
-      str+="<section data-markdown># #{@indexFileLine.name()}"
-
-      if PresentationTrack.sectionCounter == 0
-        str+= "\n\n source: [github](#{@loader.readme})"
-        str+= "\n\n pdf (only in chrome): [open](#{window.location.href.split("#")[0]}?print-pdf)"
-
-      PresentationTrack.sectionCounter++
-
-      str+="</section>"
+      str+="<section data-markdown># #{@indexFileLine.name()} </section>"
     else
       str+="<section data-markdown='#{@remotePath()}' data-remote-path='#{@remotePath()}'></section>"
 
@@ -89,7 +77,6 @@ class PresentationComposer
       line        = new IndexFileLine(line)
       track       = new PresentationTrack(@loader, line)
 
-      console.log line.depth(), line.path()
       if line.isRoot()
         @rootTrack.append(track)
         lastRoot = track
@@ -117,7 +104,8 @@ class @CwRevealLoader
       $.ajax
         url: "#{src}/index.md"
         success: (data) =>
-          data = "- [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
+          data = "  - [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
+
           @renderPresentation(data)
     , 0)
 
@@ -136,7 +124,6 @@ class @CwRelativePathResolver
     $.each slides, (index, slide) ->
       images = $('img', slide)
       $.each images, (index, image) ->
-        console.log image
         $image = $(image)
         relativeSource = $image.attr('src')
         $parentSection = $image.closest('section')
@@ -163,3 +150,9 @@ class @CwRelativePathResolver
           sectionBasePath = tmp.join('/')
           absolutePath = sectionBasePath + '/' + relativeSource.slice(2)
           $links.attr 'href', absolutePath
+
+  @appendSources: =>
+    $('section > section', '.reveal .slides').first().append(
+      "<ul><li>source: <a href='#{cwRevealConfig.src}' target='_blank'>github</a></li>" +
+      "<li>pdf <small>(Chrome)</small>: <a href='#{window.location.href.split("#")[0]}?print-pdf' target='_blank'>pdf</a></li></ul>"
+    )

@@ -2,6 +2,7 @@
   jQuery(document).ready(function($) {
     Reveal.addEventListener('ready', function() {
       CwRelativePathResolver.resolve();
+      CwRelativePathResolver.appendSources();
       $('.fancybox').fancybox({
         selector: '.fancybox'
       });
