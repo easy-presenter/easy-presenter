@@ -9,16 +9,19 @@ class IndexFileLine
 
   name: =>
     res = @line.match(IndexFileLine.nameRegexp)
-    return @line if res.length < 2
+    return @line if !res || res.length < 2
     res[1]
 
   path: =>
     res = @line.match(IndexFileLine.pathRegexp)
-    return @line if res.length < 2
+    return @line if !res || res.length < 2
     res[1]
 
   depth: =>
-    @path().split('/').length - 1
+    @path().split('/').length - 2 #'./any_file'
+
+  isRoot: =>
+    @depth() == 0
 
   parentPath: =>
     return '/' if @path.indexOf('/') == -1 # top level
@@ -49,12 +52,14 @@ class PresentationTrack
       return content
 
     str = ""
-    str = "<section>" if @indexFileLine.depth() == 0
+    str = "<section>" if @indexFileLine.isRoot()
 
     if @indexFileLine.isDirectory()
+      try{
+
+      }
       str+="<section data-markdown># #{@indexFileLine.name()}"
 
-      console.log PresentationTrack.sectionCounter
       if PresentationTrack.sectionCounter == 0
         str+= "\n\n source: [github](#{@loader.readme})"
         str+= "\n\n pdf (only in chrome): [open](#{window.location.href.split("#")[0]}?print-pdf)"
@@ -67,7 +72,7 @@ class PresentationTrack
 
     str+= content
 
-    str+= "</section>" if @indexFileLine.depth() == 0
+    str+= "</section>" if @indexFileLine.isRoot()
 
     str
 
@@ -84,7 +89,8 @@ class PresentationComposer
       line        = new IndexFileLine(line)
       track       = new PresentationTrack(@loader, line)
 
-      if line.depth() == 0
+      console.log line.depth(), line.path()
+      if line.isRoot()
         @rootTrack.append(track)
         lastRoot = track
 
@@ -103,15 +109,15 @@ class @CwRevealLoader
     @readme    = @config.readme
     @container = $(@config.selector)
     @composer  = new PresentationComposer(@)
-    @bootstrap()
-
-  bootstrap: =>
-    @loadPresentation("#{@src}/README.md")
+    @loadPresentation(@src)
 
   loadPresentation: (src) =>
+    @startSlide = ''
     $.ajax
-      url: src
-      success: @renderPresentation
+      url: "#{src}/index.md"
+      success: (data) =>
+        data = "- [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
+        @renderPresentation(data)
 
   renderPresentation: (data) =>
     @composer.compose(data)

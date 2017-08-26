@@ -10,6 +10,7 @@
     function IndexFileLine(line1) {
       this.line = line1;
       this.parentPath = bind(this.parentPath, this);
+      this.isRoot = bind(this.isRoot, this);
       this.depth = bind(this.depth, this);
       this.path = bind(this.path, this);
       this.name = bind(this.name, this);
@@ -23,7 +24,7 @@
     IndexFileLine.prototype.name = function() {
       var res;
       res = this.line.match(IndexFileLine.nameRegexp);
-      if (res.length < 2) {
+      if (!res || res.length < 2) {
         return this.line;
       }
       return res[1];
@@ -32,14 +33,18 @@
     IndexFileLine.prototype.path = function() {
       var res;
       res = this.line.match(IndexFileLine.pathRegexp);
-      if (res.length < 2) {
+      if (!res || res.length < 2) {
         return this.line;
       }
       return res[1];
     };
 
     IndexFileLine.prototype.depth = function() {
-      return this.path().split('/').length - 1;
+      return this.path().split('/').length - 2;
+    };
+
+    IndexFileLine.prototype.isRoot = function() {
+      return this.depth() === 0;
     };
 
     IndexFileLine.prototype.parentPath = function() {
@@ -88,12 +93,14 @@
         return content;
       }
       str = "";
-      if (this.indexFileLine.depth() === 0) {
+      if (this.indexFileLine.isRoot()) {
         str = "<section>";
       }
       if (this.indexFileLine.isDirectory()) {
+        try {
+          ({});
+        } catch (undefined) {}
         str += "<section data-markdown># " + (this.indexFileLine.name());
-        console.log(PresentationTrack.sectionCounter);
         if (PresentationTrack.sectionCounter === 0) {
           str += "\n\n source: [github](" + this.loader.readme + ")";
           str += "\n\n pdf (only in chrome): [open](" + (window.location.href.split("#")[0]) + "?print-pdf)";
@@ -104,7 +111,7 @@
         str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
       str += content;
-      if (this.indexFileLine.depth() === 0) {
+      if (this.indexFileLine.isRoot()) {
         str += "</section>";
       }
       return str;
@@ -133,7 +140,8 @@
         }
         line = new IndexFileLine(line);
         track = new PresentationTrack(this.loader, line);
-        if (line.depth() === 0) {
+        console.log(line.depth(), line.path());
+        if (line.isRoot()) {
           this.rootTrack.append(track);
           lastRoot = track;
         } else {
@@ -157,22 +165,23 @@
       this.initializeReveal = bind(this.initializeReveal, this);
       this.renderPresentation = bind(this.renderPresentation, this);
       this.loadPresentation = bind(this.loadPresentation, this);
-      this.bootstrap = bind(this.bootstrap, this);
       this.src = this.config.presentation;
       this.readme = this.config.readme;
       this.container = $(this.config.selector);
       this.composer = new PresentationComposer(this);
-      this.bootstrap();
+      this.loadPresentation(this.src);
     }
 
-    CwRevealLoader.prototype.bootstrap = function() {
-      return this.loadPresentation(this.src + "/README.md");
-    };
-
     CwRevealLoader.prototype.loadPresentation = function(src) {
+      this.startSlide = '';
       return $.ajax({
-        url: src,
-        success: this.renderPresentation
+        url: src + "/index.md",
+        success: (function(_this) {
+          return function(data) {
+            data = "- [00_overview](./00_overview.md) \n\n " + data;
+            return _this.renderPresentation(data);
+          };
+        })(this)
       });
     };
 
