@@ -299,6 +299,9 @@
         if (!url) {
           return;
         }
+        if (url.indexOf('00_index/02_topics') !== -1) {
+          return;
+        }
         url = url.replace('raw.githubusercontent.com', 'github.com');
         url = url.replace('/master/', '/blob/master/');
         return $('h1, h2, h3, h4', slide).first().prepend("<a href='" + url + "' target='_blank' title='view on github' class='github-source'> </a>");

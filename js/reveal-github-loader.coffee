@@ -183,7 +183,10 @@ class @CwGithubLinkForSLide
       # https://github.com/easy-presentations/cw-wordpress-divi/blob/master/pages/de/00_index/00_overview.md
       # https://raw.github/easy-presentations/cw-wordpress-divi/master/pages/de/00_index/00_overview.md
       url = $(slide).data('section-source')
+
       return unless url
+
+      return if url.indexOf('00_index/02_topics') != -1
 
       url = url.replace('raw.githubusercontent.com', 'github.com')
       url = url.replace('/master/', '/blob/master/')
