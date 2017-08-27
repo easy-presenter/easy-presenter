@@ -26,39 +26,57 @@ body
       display: none
 
 .reveal
-  font-size: 30px
   font-family: OpenSans,HelveticaNeue,Arial,sans-serif
   color: #37444e
 
 \::selection, ::-moz-selection
   color: #fff
-  // background: rgba(79, 64, 28, 0.99)
   text-shadow: none
 
 img
   width: 100%
+  max-width: 100%
   height: auto
 
 @mixin make-slide-with-image
-  font-size: 20px
+  font-size: 26px
   h1
-    font-size: 1.55em
+    font-size: 60px
   h2
-    font-size: 1em
+    font-size: 40px
   h3
-    font-size: 1em
+    font-size: 30px
   h4
     font-size: 1em
   img
     max-width: 70%
     cursor: pointer
 
+.logo
+  position: absolute
+  bottom: 10px
+  left: 10px
+  z-index: 10000
+  width: auto
+
 .reveal
   background: url('https://www.creative-workflow.berlin/images/logos/bg.png') repeat #f7f7f7
+
+  a.github-source
+    background: url('../../images/github.png') no-repeat
+    background-size: contain
+    display: inline-block
+    width: 40px
+    height: 40px
+    opacity: .2
+    position: relative
+    right: 20px
+    top: 20px
 
   .slides > section
     line-height: 1.3
     font-weight: inherit
+    font-size: 30px
     > section
       line-height: 1.3
       font-weight: inherit
@@ -77,15 +95,13 @@ img
       text-shadow: none
       word-wrap: break-word
     h1
-      font-size: 2.11em
+      font-size: 80px
     h2
-      font-size: 1.55em
+      font-size: 60px
     h3
-      font-size: 1em
+      font-size: 40px
     h4
       font-size: 1em
-    h1
-      // text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #37444e, 0 6px 1px rgba(0, 0, 0, 0.1), 0 0 5px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.3), 0 3px 5px rgba(0, 0, 0, 0.2), 0 5px 10px rgba(0, 0, 0, 0.25), 0 20px 20px rgba(0, 0, 0, 0.15)
     p
       margin: 20px 0
       line-height: 1.3
@@ -206,7 +222,7 @@ img
     section img
       margin: 15px 0px
       background: rgba(255, 255, 255, 0.12)
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15)
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.12)
       &.plain
         box-shadow: none
     a

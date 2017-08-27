@@ -1,6 +1,8 @@
 (function() {
-  var IndexFileLine, PresentationComposer, PresentationTrack,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var IndexFileLine, PresentationComposer, PresentationTrack, PresentationTrackRaw,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   IndexFileLine = (function() {
     IndexFileLine.nameRegexp = new RegExp('\\[([^\\]]*)\\]');
@@ -23,7 +25,6 @@
 
     IndexFileLine.prototype.name = function() {
       var res;
-      console.log(this.line);
       res = this.line.match(IndexFileLine.nameRegexp);
       if (!res || res.length < 2) {
         return this.line;
@@ -64,66 +65,153 @@
       this.loader = loader;
       this.indexFileLine = indexFileLine != null ? indexFileLine : null;
       this.renderSection = bind(this.renderSection, this);
+      this.renderSections = bind(this.renderSections, this);
       this.render = bind(this.render, this);
+      this.load = bind(this.load, this);
+      this.isRootTrack = bind(this.isRootTrack, this);
       this.remotePath = bind(this.remotePath, this);
+      this.path = bind(this.path, this);
+      this.isRoot = bind(this.isRoot, this);
+      this.isDirectory = bind(this.isDirectory, this);
       this.append = bind(this.append, this);
       this.children = [];
+      this.content = '';
     }
 
     PresentationTrack.prototype.append = function(track) {
       return this.children.push(track);
     };
 
+    PresentationTrack.prototype.isDirectory = function() {
+      return this.indexFileLine.isDirectory();
+    };
+
+    PresentationTrack.prototype.isRoot = function() {
+      return this.indexFileLine.isRoot();
+    };
+
+    PresentationTrack.prototype.path = function() {
+      return this.indexFileLine.path();
+    };
+
     PresentationTrack.prototype.remotePath = function() {
-      return this.loader.src + "/" + (this.indexFileLine.path());
+      var path;
+      path = this.loader.src + "/" + (this.path());
+      if (this.indexFileLine && !this.isDirectory()) {
+        return path;
+      }
+      return path + "/00_overview.md";
+    };
+
+    PresentationTrack.prototype.isRootTrack = function() {
+      return this.indexFileLine === null;
+    };
+
+    PresentationTrack.prototype.load = function(callback) {
+      var defered;
+      defered = [];
+      this.children.map((function(_this) {
+        return function(child) {
+          return defered.push(child.load());
+        };
+      })(this));
+      if (!this.isRootTrack()) {
+        defered.push($.ajax({
+          url: this.remotePath(),
+          success: (function(_this) {
+            return function(data) {
+              return _this.content = data;
+            };
+          })(this)
+        }));
+      }
+      return $.when.apply($, defered).always(callback);
     };
 
     PresentationTrack.prototype.render = function() {
-      var childrenContent;
-      childrenContent = this.children.map(function(child) {
+      var renderedChildren;
+      renderedChildren = this.children.map(function(child) {
         return child.render();
       });
-      return this.renderSection(childrenContent.join("\n\n"));
+      return this.renderSections(renderedChildren.join("\n\n"));
     };
 
-    PresentationTrack.prototype.renderSection = function(content) {
-      var e, error, str;
-      if (!this.indexFileLine) {
-        return content;
+    PresentationTrack.prototype.renderSections = function(childrenContent) {
+      var str;
+      if (this.isRootTrack()) {
+        return childrenContent;
       }
       str = "";
-      if (this.indexFileLine.isRoot()) {
-        str = "<section>";
+      if (this.isRoot()) {
+        str += "<section>";
       }
-      if (this.indexFileLine.isDirectory()) {
-        try {
-          console.log(this.indexFileLine.line, this.indexFileLine.path());
-          $.ajax({
-            url: (this.remotePath()) + "/00_overview.md",
-            async: false,
-            success: (function(_this) {
-              return function(data) {
-                return str += "<section data-markdown>" + data + " </section>";
-              };
-            })(this)
-          });
-        } catch (error) {
-          e = error;
-          str += "<section data-markdown># " + (this.indexFileLine.name()) + " </section>";
+      if (this.content) {
+        str += this.renderSection(this.remotePath(), this.content);
+      }
+      if (childrenContent) {
+        if (!this.isDirectory()) {
+          str += this.renderSection(this.remotePath(), childrenContent);
+        } else {
+          str += childrenContent;
         }
-      } else {
-        str += "<section data-markdown='" + (this.remotePath()) + "' data-remote-path='" + (this.remotePath()) + "'></section>";
       }
-      str += content;
-      if (this.indexFileLine.isRoot()) {
+      if (this.isRoot()) {
         str += "</section>";
       }
       return str;
     };
 
+    PresentationTrack.prototype.renderSection = function(remotePath, content) {
+      return ("<section data-markdown data-section-source='" + remotePath + "'>") + ("<script type='text/template'>" + content + "</script>") + "</section>";
+    };
+
     return PresentationTrack;
 
   })();
+
+  PresentationTrackRaw = (function(superClass) {
+    extend(PresentationTrackRaw, superClass);
+
+    function PresentationTrackRaw(loader, name, path1, content, isDirectory, isRoot) {
+      this.loader = loader;
+      this.name = name;
+      this.path = path1;
+      this.isDirectory = isDirectory != null ? isDirectory : false;
+      this.isRoot = isRoot != null ? isRoot : true;
+      this.path = bind(this.path, this);
+      this.isRoot = bind(this.isRoot, this);
+      this.isDirectory = bind(this.isDirectory, this);
+      this.load = bind(this.load, this);
+      PresentationTrackRaw.__super__.constructor.call(this, this.loader, new IndexFileLine("  - [" + this.name + "](" + this.path + ")"));
+      this.content = content;
+    }
+
+    PresentationTrackRaw.prototype.load = function(callback) {
+      var defered;
+      defered = [];
+      this.children.map((function(_this) {
+        return function(child) {
+          return defered.push(child.load());
+        };
+      })(this));
+      return $.when.apply($, defered).always(callback);
+    };
+
+    PresentationTrackRaw.prototype.isDirectory = function() {
+      return this.isDirectory;
+    };
+
+    PresentationTrackRaw.prototype.isRoot = function() {
+      return this.isRoot;
+    };
+
+    PresentationTrackRaw.prototype.path = function() {
+      return this.path;
+    };
+
+    return PresentationTrackRaw;
+
+  })(PresentationTrack);
 
   PresentationComposer = (function() {
     function PresentationComposer(loader) {
@@ -133,9 +221,9 @@
       this.rootTrack = new PresentationTrack(this.loader);
     }
 
-    PresentationComposer.prototype.compose = function(dataAsString) {
+    PresentationComposer.prototype.compose = function(dataAsString, callback) {
       var i, lastRoot, len, line, ref, track;
-      lastRoot = null;
+      lastRoot = this.rootTrack;
       ref = dataAsString.split('\n');
       for (i = 0, len = ref.length; i < len; i++) {
         line = ref[i];
@@ -151,11 +239,16 @@
           lastRoot.append(track);
         }
       }
-      return this.render();
+      return this.render(callback);
     };
 
-    PresentationComposer.prototype.render = function() {
-      return this.loader.container.append(this.rootTrack.render());
+    PresentationComposer.prototype.render = function(callback) {
+      return this.rootTrack.load((function(_this) {
+        return function() {
+          _this.loader.container.append(_this.rootTrack.render());
+          return callback();
+        };
+      })(this));
     };
 
     return PresentationComposer;
@@ -166,7 +259,6 @@
     function CwRevealLoader(config) {
       this.config = config;
       this.initializeReveal = bind(this.initializeReveal, this);
-      this.renderPresentation = bind(this.renderPresentation, this);
       this.loadPresentation = bind(this.loadPresentation, this);
       this.src = this.config.presentation;
       this.readme = this.config.readme;
@@ -177,22 +269,14 @@
 
     CwRevealLoader.prototype.loadPresentation = function(src) {
       this.startSlide = '';
-      return setTimeout((function(_this) {
-        return function() {
-          return $.ajax({
-            url: src + "/index.md",
-            success: function(data) {
-              data = "  - [00_overview](./00_overview.md) \n\n " + data;
-              return _this.renderPresentation(data);
-            }
-          });
-        };
-      })(this), 0);
-    };
-
-    CwRevealLoader.prototype.renderPresentation = function(data) {
-      this.composer.compose(data);
-      return this.initializeReveal();
+      return $.ajax({
+        url: src + "/index.md",
+        success: (function(_this) {
+          return function(data) {
+            return _this.composer.compose(data, _this.initializeReveal);
+          };
+        })(this)
+      });
     };
 
     CwRevealLoader.prototype.initializeReveal = function() {
@@ -203,8 +287,32 @@
 
   })();
 
+  this.CwGithubLinkForSLide = (function() {
+    function CwGithubLinkForSLide() {}
+
+    CwGithubLinkForSLide.appendGithubLinksToSLides = function() {
+      var slides;
+      slides = $('.reveal .slides section');
+      return $.each(slides, function(index, slide) {
+        var url;
+        url = $(slide).data('section-source');
+        if (!url) {
+          return;
+        }
+        url = url.replace('raw.githubusercontent.com', 'github.com');
+        url = url.replace('/master/', '/blob/master/');
+        return $('h1, h2, h3, h4', slide).first().prepend("<a href='" + url + "' target='_blank' title='view on github' class='github-source'> </a>");
+      });
+    };
+
+    return CwGithubLinkForSLide;
+
+  })();
+
   this.CwRelativePathResolver = (function() {
     function CwRelativePathResolver() {}
+
+    CwRelativePathResolver.pathRegexp = new RegExp('.*\\]\\((\\./[^\\)]*)\\)', 'g');
 
     CwRelativePathResolver.resolve = function() {
       var slides;
@@ -215,11 +323,11 @@
         $.each(images, function(index, image) {
           var $image, $imageLink, $parentSection, absolutePath, relativeSource, sectionBasePath, sectionSource, tmp;
           $image = $(image);
-          relativeSource = $image.attr('src');
+          relativeSource = $image.attr('cw-data-src') || $image.attr('src');
           $parentSection = $image.closest('section');
           $parentSection.addClass('with-image');
           if (relativeSource.indexOf('./') === 0) {
-            sectionSource = $parentSection.data('remote-path');
+            sectionSource = $parentSection.data('section-source');
             tmp = sectionSource.split('/');
             tmp.pop();
             sectionBasePath = tmp.join('/');
@@ -236,7 +344,7 @@
           relativeSource = $links.attr('href');
           $parentSection = $links.closest('section');
           if (relativeSource.indexOf('./') === 0) {
-            sectionSource = $parentSection.data('remote-path');
+            sectionSource = $parentSection.data('section-source');
             tmp = sectionSource.split('/');
             tmp.pop();
             sectionBasePath = tmp.join('/');

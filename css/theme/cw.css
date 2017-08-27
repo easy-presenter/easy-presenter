@@ -16,7 +16,6 @@ body {
     display: none; }
 
 .reveal {
-  font-size: 30px;
   font-family: OpenSans,HelveticaNeue,Arial,sans-serif;
   color: #37444e; }
 
@@ -26,13 +25,32 @@ body {
 
 img {
   width: 100%;
+  max-width: 100%;
   height: auto; }
+
+.logo {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 10000;
+  width: auto; }
 
 .reveal {
   background: url("https://www.creative-workflow.berlin/images/logos/bg.png") repeat #f7f7f7; }
+  .reveal a.github-source {
+    background: url("../../images/github.png") no-repeat;
+    background-size: contain;
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    opacity: .2;
+    position: relative;
+    right: 20px;
+    top: 20px; }
   .reveal .slides > section {
     line-height: 1.3;
-    font-weight: inherit; }
+    font-weight: inherit;
+    font-size: 30px; }
     .reveal .slides > section > section {
       line-height: 1.3;
       font-weight: inherit; }
@@ -40,13 +58,13 @@ img {
       padding-top: 0 !important; }
       .reveal .slides > section section.with-image {
         top: 50px !important;
-        font-size: 20px; }
+        font-size: 26px; }
         .reveal .slides > section section.with-image h1 {
-          font-size: 1.55em; }
+          font-size: 60px; }
         .reveal .slides > section section.with-image h2 {
-          font-size: 1em; }
+          font-size: 40px; }
         .reveal .slides > section section.with-image h3 {
-          font-size: 1em; }
+          font-size: 30px; }
         .reveal .slides > section section.with-image h4 {
           font-size: 1em; }
         .reveal .slides > section section.with-image img {
@@ -62,11 +80,11 @@ img {
       text-shadow: none;
       word-wrap: break-word; }
     .reveal .slides > section h1 {
-      font-size: 2.11em; }
+      font-size: 80px; }
     .reveal .slides > section h2 {
-      font-size: 1.55em; }
+      font-size: 60px; }
     .reveal .slides > section h3 {
-      font-size: 1em; }
+      font-size: 40px; }
     .reveal .slides > section h4 {
       font-size: 1em; }
     .reveal .slides > section p {
@@ -186,7 +204,7 @@ img {
     .reveal .slides > section section img {
       margin: 15px 0px;
       background: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.12); }
       .reveal .slides > section section img.plain {
         box-shadow: none; }
     .reveal .slides > section a img {
