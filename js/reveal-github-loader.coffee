@@ -8,6 +8,7 @@ class IndexFileLine
     @path().slice(-3) != '.md'
 
   name: =>
+    console.log @line
     res = @line.match(IndexFileLine.nameRegexp)
     return @line if !res || res.length < 2
     res[1]
@@ -32,107 +33,55 @@ class IndexFileLine
 class PresentationTrack
   constructor: (@loader, @indexFileLine=null) ->
     @children = []
-    @content  = ''
 
   append: (track) =>
     @children.push(track)
 
-  isDirectory: =>
-    @indexFileLine.isDirectory()
-
-  isRoot: =>
-    @indexFileLine.isRoot()
-
-  path: =>
-    @indexFileLine.path()
-
   remotePath: =>
-    path = "#{@loader.src}/#{@path()}"
-
-    return path if @indexFileLine && !@isDirectory()
-
-    return "#{path}/00_overview.md" # if directory
-
-  isRootTrack: =>
-    @indexFileLine == null
-
-  load: (callback) =>
-    defered = []
-    @children.map (child) =>
-      defered.push(child.load())
-
-    unless @isRootTrack()
-      defered.push(
-        $.ajax
-          url: @remotePath()
-          success: (data) =>
-            @content = data
-      )
-
-    $.when.apply($, defered).always( callback )
+    "#{@loader.src}/#{@indexFileLine.path()}"
 
   render: =>
-    renderedChildren = @children.map( (child) ->
+    childrenContent = @children.map((child)->
       child.render()
     )
 
-    @renderSections(renderedChildren.join("\n\n"))
+    @renderSection(childrenContent.join("\n\n"))
 
-  renderSections: (childrenContent)=>
-    return childrenContent if @isRootTrack()
+  renderSection: (content) =>
+    unless @indexFileLine #root node
+      return content
 
     str = ""
+    str = "<section>" if @indexFileLine.isRoot()
 
-    # add a section for vertical slides if it is a toplevel folder
-    str+= "<section>" if @isRoot()
+    if @indexFileLine.isDirectory()
+      try
+        console.log @indexFileLine.line, @indexFileLine.path()
+        $.ajax
+          url: "#{@remotePath()}/00_overview.md"
+          async: false
+          cache: false
+          success: (data) =>
+            str+="<section data-markdown>#{data} </section>"
+      catch e
+        str+="<section data-markdown># #{@indexFileLine.name()} </section>"
 
-    str+= @renderSection(@remotePath(), @content) if @content
+    else
+      str+="<section data-markdown='#{@remotePath()}' data-remote-path='#{@remotePath()}'></section>"
 
-    if childrenContent
-      if !@isDirectory()
-        str+= @renderSection(@remotePath(), childrenContent)
-      else
-        str+= childrenContent
+    str+= content
 
-    # add a section for vertical slides if it is a toplevel folder
-    str+= "</section>" if @isRoot()
+    str+= "</section>" if @indexFileLine.isRoot()
 
     str
 
-  renderSection: (remotePath, content)=>
-    "<section data-markdown data-section-source='#{remotePath}'>" +
-      "<script type='text/template'>#{content}</script>" +
-    "</section>"
-
-
-class PresentationTrackRaw extends PresentationTrack
-  constructor: (@loader, @name, @path, content, @isDirectory=false, @isRoot=true) ->
-    super @loader, new IndexFileLine("  - [#{@name}](#{@path})")
-    @content = content
-
-  load: (callback) =>
-    defered = []
-    @children.map (child) =>
-      defered.push(child.load())
-
-    $.when.apply($, defered).always(callback)
-
-  isDirectory: =>
-    @isDirectory
-
-  isRoot: =>
-    @isRoot
-
-  path: =>
-
-    @path
 
 class PresentationComposer
   constructor: (@loader) ->
     @rootTrack = new PresentationTrack(@loader)
 
-  compose: (dataAsString, callback) =>
-    lastRoot = @rootTrack
+  compose: (dataAsString) =>
+    lastRoot = null
     for line in dataAsString.split('\n')
       continue if line.indexOf('-') == -1
 
@@ -141,18 +90,15 @@ class PresentationComposer
 
       if line.isRoot()
         @rootTrack.append(track)
-
         lastRoot = track
 
       else
         lastRoot.append(track)
 
-    @render(callback)
+    @render()
 
-  render: (callback) =>
-    @rootTrack.load =>
-      @loader.container.append(@rootTrack.render())
-      callback()
+  render: =>
+    @loader.container.append(@rootTrack.render())
 
 
 class @CwRevealLoader
@@ -165,49 +111,37 @@ class @CwRevealLoader
 
   loadPresentation: (src) =>
     @startSlide = ''
+    setTimeout( =>
+      $.ajax
+        url: "#{src}/index.md"
+        cache: false
+        success: (data) =>
+          data = "  - [00_overview](./00_overview.md) \n\n " + data # add presentation start slide
 
-    $.ajax(
-      url: "#{src}/index.md"
-      success: (data) =>
-        @composer.compose(data, @initializeReveal)
-    )
+          @renderPresentation(data)
+    , 0)
+
+  renderPresentation: (data) =>
+    @composer.compose(data)
+
+    @initializeReveal()
 
   initializeReveal: =>
     Reveal.initialize @config.reveal
 
-
-class @CwGithubLinkForSLide
-  @appendGithubLinksToSLides: ->
-    slides = $('.reveal .slides section')
-    $.each slides, (index, slide) ->
-      # https://github.com/easy-presentations/cw-wordpress-divi/blob/master/pages/de/00_index/00_overview.md
-      # https://raw.github/easy-presentations/cw-wordpress-divi/master/pages/de/00_index/00_overview.md
-      url = $(slide).data('section-source')
-
-      return unless url
-
-      return if url.indexOf('00_index/02_topics') != -1
-
-      url = url.replace('raw.githubusercontent.com', 'github.com')
-      url = url.replace('/master/', '/blob/master/')
-
-      $('h1, h2, h3, h4', slide).first().prepend("<a href='#{url}' target='_blank' title='view on github' class='github-source'> </a>")
-
-
 class @CwRelativePathResolver
-  @pathRegexp: new RegExp('.*\\]\\((\\./[^\\)]*)\\)', 'g')
-
   @resolve: ->
     slides = $('.reveal .slides section')
+
     $.each slides, (index, slide) ->
       images = $('img', slide)
       $.each images, (index, image) ->
         $image = $(image)
-        relativeSource = $image.attr('cw-data-src') || $image.attr('src')
+        relativeSource = $image.attr('src')
         $parentSection = $image.closest('section')
         $parentSection.addClass 'with-image'
         if relativeSource.indexOf('./') == 0
-          sectionSource = $parentSection.data('section-source')
+          sectionSource = $parentSection.data('remote-path')
           tmp = sectionSource.split('/')
           tmp.pop()
           sectionBasePath = tmp.join('/')
@@ -222,7 +156,7 @@ class @CwRelativePathResolver
         relativeSource = $links.attr('href')
         $parentSection = $links.closest('section')
         if relativeSource.indexOf('./') == 0
-          sectionSource = $parentSection.data('section-source')
+          sectionSource = $parentSection.data('remote-path')
           tmp = sectionSource.split('/')
           tmp.pop()
           sectionBasePath = tmp.join('/')
