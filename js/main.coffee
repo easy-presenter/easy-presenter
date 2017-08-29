@@ -40,7 +40,7 @@ class AppController
     $('.fancybox').fancybox selector: '.fancybox'
 
     @hideLoader(->
-      $('.reveal').fadeIn()
+      $('.reveal').fadeIn().show()
     )
 
 

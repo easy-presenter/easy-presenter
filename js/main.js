@@ -50,7 +50,7 @@
         selector: '.fancybox'
       });
       return this.hideLoader(function() {
-        return $('.reveal').fadeIn();
+        return $('.reveal').fadeIn().show();
       });
     };
 
