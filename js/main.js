@@ -1,57 +1,75 @@
 (function() {
-  jQuery(document).ready(function($) {
-    Reveal.addEventListener('ready', function() {
+  var AppController,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  AppController = (function() {
+    function AppController(config) {
+      var presentation;
+      this.config = config;
+      this.onPresentationReady = bind(this.onPresentationReady, this);
+      this.loadPresentation = bind(this.loadPresentation, this);
+      this.onPresentationIndexReady = bind(this.onPresentationIndexReady, this);
+      this.loadPresentationIndex = bind(this.loadPresentationIndex, this);
+      presentation = $.urlParam('presentation');
+      if (presentation) {
+        this.loadPresentation(this.config.src + "/" + presentation);
+      } else {
+        this.loadPresentationIndex(this.config.src);
+      }
+    }
+
+    AppController.prototype.hideLoader = function(callBack) {
+      return $('.loader').fadeOut(function() {
+        $('body').removeClass('loading');
+        return $('.loader').hide(callBack);
+      });
+    };
+
+    AppController.prototype.loadPresentationIndex = function(src) {
+      CwPresentationIndexLoader.addReadyEventListener(this.onPresentationIndexReady);
+      return new CwPresentationIndexLoader(src, '.presentation-selector');
+    };
+
+    AppController.prototype.onPresentationIndexReady = function() {
+      return this.hideLoader(function() {
+        $('body').addClass('flex-centered');
+        return $('.presentation-selector-container').fadeIn();
+      });
+    };
+
+    AppController.prototype.loadPresentation = function(presentation) {
+      CwPresentationLoader.addReadyEventListener(this.onPresentationReady);
+      window.cwRevealConfig.presentation = presentation;
+      return new CwPresentationLoader(window.cwRevealConfig);
+    };
+
+    AppController.prototype.onPresentationReady = function() {
       CwRelativePathResolver.resolve();
       CwGithubLinkForSLide.appendGithubLinksToSLides();
       $('.fancybox').fancybox({
         selector: '.fancybox'
       });
-      $('body').removeClass('loading');
-      return $('.loader').fadeOut(function() {
-        return $('.loader').hide(function() {
-          return $('.reveal .slides').fadeIn();
-        });
+      return this.hideLoader(function() {
+        return $('.reveal').fadeIn();
       });
-    });
-    return new CwRevealLoader($.extend(true, {
-      selector: '.reveal .slides',
-      reveal: {
-        autoSlideMethod: Reveal.navigateNext,
-        dependencies: [
-          {
-            src: 'lib/js/classList.js',
-            condition: function() {
-              return !document.body.classList;
-            }
-          }, {
-            src: 'plugin/markdown/marked.js',
-            condition: function() {
-              return !!document.querySelector('[data-markdown]');
-            }
-          }, {
-            src: 'plugin/markdown/markdown.js',
-            condition: function() {
-              return !!document.querySelector('[data-markdown]');
-            }
-          }, {
-            src: 'plugin/highlight/highlight.js',
-            async: true,
-            callback: function() {
-              return hljs.initHighlightingOnLoad();
-            }
-          }, {
-            src: 'plugin/zoom-js/zoom.js',
-            async: true
-          }, {
-            src: 'plugin/notes/notes.js',
-            async: true
-          }, {
-            src: 'plugin/math/math.js',
-            async: true
-          }
-        ]
+    };
+
+    return AppController;
+
+  })();
+
+  jQuery(document).ready(function($) {
+    $.urlParam = function(name) {
+      var results;
+      results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results === null) {
+        return null;
       }
-    }, window.cwRevealConfig));
+      return decodeURIComponent(results[1]) || 0;
+    };
+    return new AppController({
+      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/tracks'
+    });
   });
 
 }).call(this);

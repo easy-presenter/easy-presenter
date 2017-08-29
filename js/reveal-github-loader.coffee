@@ -124,7 +124,6 @@ class PresentationTrack
 #     @isRoot
 #
 #   path: =>
-#
 #     @path
 
 class PresentationComposer
@@ -155,19 +154,20 @@ class PresentationComposer
       callback()
 
 
-class @CwRevealLoader
+class @CwPresentationLoader
+  @addReadyEventListener: (callback) ->
+    Reveal.addEventListener 'ready', callback
+
   constructor: (@config) ->
     @src       = @config.presentation
     @readme    = @config.readme
-    @container = $(@config.selector)
+    @container = $('.reveal .slides')
     @composer  = new PresentationComposer(@)
     @loadPresentation(@src)
 
   loadPresentation: (src) =>
-    @startSlide = ''
-
     $.ajax(
-      url: "#{src}/index.md"
+      url: "#{src}/index.md".replace('/./', '/')
       success: (data) =>
         @composer.compose(data, @initializeReveal)
     )
@@ -234,3 +234,28 @@ class @CwRelativePathResolver
       "<ul><li>source: <a href='#{cwRevealConfig.src}' target='_blank'>github</a></li>" +
       "<li>pdf <small>(Chrome)</small>: <a href='#{window.location.href.split("#")[0]}?print-pdf' target='_blank'>pdf</a></li></ul>"
     )
+
+class @CwPresentationIndexLoader
+  @addReadyEventListener: (callback) ->
+    $(document).on 'ready.index-loader', callback
+
+  constructor: (@src, @selector) ->
+    @container = $(@selector)
+    @loadPresentationIndex(@src)
+
+  loadPresentationIndex: (src) =>
+    $.ajax(
+      url: "#{src}/index.md"
+      success: @renderPresentationIndex
+    )
+
+  renderPresentationIndex: (dataAsString) =>
+    for line in dataAsString.split('\n')
+      continue if line.indexOf('-') == -1
+
+      line = new IndexFileLine(line)
+
+      location = window.location.href.split('#').shift()
+      @container.append("<a href='#{location}?presentation=#{encodeURI(line.path())}' target='_blank'>#{line.name()}</a>")
+
+    $(document).trigger('ready.index-loader')

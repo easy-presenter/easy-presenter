@@ -4,16 +4,14 @@
 /* GLOBAL STYLES */
 /******************************************** */
 body {
-  background-color: #37444e; }
-  body.loading {
+  background: url("https://www.creative-workflow.berlin/images/logos/bg.png") repeat #f7f7f7; }
+  body.loading, body.flex-centered {
     display: flex;
     align-items: center;
     justify-content: center; }
   body .loader {
     position: absolute;
     z-index: 100; }
-  body .reveal .slides {
-    display: none; }
 
 .reveal {
   font-family: OpenSans,HelveticaNeue,Arial,sans-serif;
@@ -35,8 +33,37 @@ img {
   z-index: 10000;
   width: auto; }
 
+.presentation-selector-container {
+  display: none;
+  width: 100%;
+  text-align: center; }
+  .presentation-selector-container h1 {
+    font-size: 40px;
+    font-family: OpenSans,HelveticaNeue,Arial,sans-serif;
+    font-weight: bold;
+    color: #37444e; }
+  .presentation-selector-container .presentation-selector {
+    display: inline-block;
+    text-align: left; }
+    .presentation-selector-container .presentation-selector a {
+      display: block;
+      color: #37444e;
+      text-decoration: none;
+      font-size: 30px;
+      font-family: OpenSans,HelveticaNeue,Arial,sans-serif;
+      font-weight: bold;
+      padding: 5px 3px;
+      position: relative;
+      left: 30px; }
+      .presentation-selector-container .presentation-selector a:before {
+        content: "\00bb";
+        position: absolute;
+        color: #5e5e5e;
+        font-weight: 700;
+        left: -15px; }
+
 .reveal {
-  background: url("https://www.creative-workflow.berlin/images/logos/bg.png") repeat #f7f7f7; }
+  display: none; }
   .reveal a.github-source {
     background: url("../../images/github.png") no-repeat;
     background-size: contain;

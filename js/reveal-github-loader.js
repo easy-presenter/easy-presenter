@@ -209,22 +209,25 @@
 
   })();
 
-  this.CwRevealLoader = (function() {
-    function CwRevealLoader(config) {
+  this.CwPresentationLoader = (function() {
+    CwPresentationLoader.addReadyEventListener = function(callback) {
+      return Reveal.addEventListener('ready', callback);
+    };
+
+    function CwPresentationLoader(config) {
       this.config = config;
       this.initializeReveal = bind(this.initializeReveal, this);
       this.loadPresentation = bind(this.loadPresentation, this);
       this.src = this.config.presentation;
       this.readme = this.config.readme;
-      this.container = $(this.config.selector);
+      this.container = $('.reveal .slides');
       this.composer = new PresentationComposer(this);
       this.loadPresentation(this.src);
     }
 
-    CwRevealLoader.prototype.loadPresentation = function(src) {
-      this.startSlide = '';
+    CwPresentationLoader.prototype.loadPresentation = function(src) {
       return $.ajax({
-        url: src + "/index.md",
+        url: (src + "/index.md").replace('/./', '/'),
         success: (function(_this) {
           return function(data) {
             return _this.composer.compose(data, _this.initializeReveal);
@@ -233,11 +236,11 @@
       });
     };
 
-    CwRevealLoader.prototype.initializeReveal = function() {
+    CwPresentationLoader.prototype.initializeReveal = function() {
       return Reveal.initialize(this.config.reveal);
     };
 
-    return CwRevealLoader;
+    return CwPresentationLoader;
 
   })();
 
@@ -317,6 +320,46 @@
     };
 
     return CwRelativePathResolver;
+
+  })();
+
+  this.CwPresentationIndexLoader = (function() {
+    CwPresentationIndexLoader.addReadyEventListener = function(callback) {
+      return $(document).on('ready.index-loader', callback);
+    };
+
+    function CwPresentationIndexLoader(src1, selector) {
+      this.src = src1;
+      this.selector = selector;
+      this.renderPresentationIndex = bind(this.renderPresentationIndex, this);
+      this.loadPresentationIndex = bind(this.loadPresentationIndex, this);
+      this.container = $(this.selector);
+      this.loadPresentationIndex(this.src);
+    }
+
+    CwPresentationIndexLoader.prototype.loadPresentationIndex = function(src) {
+      return $.ajax({
+        url: src + "/index.md",
+        success: this.renderPresentationIndex
+      });
+    };
+
+    CwPresentationIndexLoader.prototype.renderPresentationIndex = function(dataAsString) {
+      var i, len, line, location, ref;
+      ref = dataAsString.split('\n');
+      for (i = 0, len = ref.length; i < len; i++) {
+        line = ref[i];
+        if (line.indexOf('-') === -1) {
+          continue;
+        }
+        line = new IndexFileLine(line);
+        location = window.location.href.split('#').shift();
+        this.container.append("<a href='" + location + "?presentation=" + (encodeURI(line.path())) + "' target='_blank'>" + (line.name()) + "</a>");
+      }
+      return $(document).trigger('ready.index-loader');
+    };
+
+    return CwPresentationIndexLoader;
 
   })();
 

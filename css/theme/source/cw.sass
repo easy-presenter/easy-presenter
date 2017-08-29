@@ -11,8 +11,9 @@
   font-weight: bold
 
 body
-  background-color: #37444e
-  &.loading
+  background: url('https://www.creative-workflow.berlin/images/logos/bg.png') repeat #f7f7f7
+
+  &.loading, &.flex-centered
     display: flex
     align-items: center
     justify-content: center
@@ -20,10 +21,6 @@ body
   .loader
     position: absolute
     z-index: 100
-
-  .reveal
-    .slides
-      display: none
 
 .reveal
   font-family: OpenSans,HelveticaNeue,Arial,sans-serif
@@ -52,6 +49,7 @@ img
     max-width: 70%
     cursor: pointer
 
+
 .logo
   position: absolute
   bottom: 10px
@@ -59,9 +57,37 @@ img
   z-index: 10000
   width: auto
 
-.reveal
-  background: url('https://www.creative-workflow.berlin/images/logos/bg.png') repeat #f7f7f7
+.presentation-selector-container
+  display: none
+  width: 100%
+  text-align: center
 
+  h1
+    font-size: 40px
+    +make-font
+    color: #37444e
+
+  .presentation-selector
+    display: inline-block
+    text-align: left
+    a
+      display: block
+      color: #37444e
+      text-decoration: none
+      font-size: 30px
+      +make-font
+      padding: 5px 3px
+      position: relative
+      left: 30px
+      &:before
+        content: "\00bb"
+        position: absolute
+        color: #5e5e5e
+        font-weight: 700
+        left: -15px
+
+.reveal
+  display: none
   a.github-source
     background: url('../../images/github.png') no-repeat
     background-size: contain

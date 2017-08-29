@@ -1,47 +1,58 @@
-jQuery(document).ready ($) ->
+class AppController
+  constructor: (@config) ->
+    presentation = $.urlParam('presentation')
 
-  Reveal.addEventListener 'ready', ->
+    if presentation
+
+      @loadPresentation("#{@config.src}/#{presentation}")
+
+    else
+      @loadPresentationIndex(@config.src)
+
+  hideLoader: (callBack) ->
+    $('.loader').fadeOut(->
+      $('body').removeClass 'loading'
+      $('.loader').hide( callBack )
+    )
+
+  loadPresentationIndex: (src) =>
+    CwPresentationIndexLoader.addReadyEventListener @onPresentationIndexReady
+
+    new CwPresentationIndexLoader(src, '.presentation-selector')
+
+  onPresentationIndexReady: =>
+    @hideLoader(->
+      $('body').addClass 'flex-centered'
+      $('.presentation-selector-container').fadeIn()
+    )
+
+  loadPresentation: (presentation) =>
+    CwPresentationLoader.addReadyEventListener @onPresentationReady
+
+    window.cwRevealConfig.presentation = presentation
+
+    new CwPresentationLoader(window.cwRevealConfig)
+
+  onPresentationReady: =>
     CwRelativePathResolver.resolve()
     CwGithubLinkForSLide.appendGithubLinksToSLides()
 
     $('.fancybox').fancybox selector: '.fancybox'
-    $('body').removeClass 'loading'
-    $('.loader').fadeOut(->
-      $('.loader').hide( ->
-        $('.reveal .slides').fadeIn()
-      )
+
+    @hideLoader(->
+      $('.reveal').fadeIn()
     )
 
-  new CwRevealLoader(
-    $.extend(true, {
-      selector: '.reveal .slides'
-      reveal: {
-        autoSlideMethod: Reveal.navigateNext
-        dependencies: [
-          {
-            src: 'lib/js/classList.js'
-            condition: -> !document.body.classList
-          },{
-            src: 'plugin/markdown/marked.js'
-            condition: -> ! !document.querySelector('[data-markdown]')
-          },{
-            src: 'plugin/markdown/markdown.js'
-            condition: -> ! !document.querySelector('[data-markdown]')
-          },{
-            src: 'plugin/highlight/highlight.js'
-            async: true
-            callback: -> hljs.initHighlightingOnLoad()
-          },{
-            src: 'plugin/zoom-js/zoom.js'
-            async: true
-          },{
-            src: 'plugin/notes/notes.js'
-            async: true
-          },{
-            src: 'plugin/math/math.js'
-            async: true
-          }
-        ]
-      }
-    }, window.cwRevealConfig)
-  )
+
+jQuery(document).ready ($) ->
+  $.urlParam = (name) ->
+    results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href)
+
+    return null if results == null
+
+    decodeURIComponent(results[1]) || 0
+
+
+  new AppController({
+      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/tracks'
+    })
