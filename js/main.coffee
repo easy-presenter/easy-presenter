@@ -54,5 +54,5 @@ jQuery(document).ready ($) ->
 
 
   new AppController({
-      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/tracks'
+      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/presentations'
     })

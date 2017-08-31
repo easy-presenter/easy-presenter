@@ -68,7 +68,7 @@
       return decodeURIComponent(results[1]) || 0;
     };
     return new AppController({
-      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/tracks'
+      src: 'https://raw.githubusercontent.com/easy-presentations/cw-wordpress-divi/master/presentations'
     });
   });
 
