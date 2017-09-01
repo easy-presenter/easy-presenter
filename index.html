@@ -23,10 +23,12 @@
 
     <script>
       // pdf
+      var is_pdf =  window.location.search.match( /print-pdf/gi );
+
       var link = document.createElement( 'link' );
       link.rel = 'stylesheet';
       link.type = 'text/css';
-      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      link.href = is_pdf ? 'css/print/pdf.css' : 'css/print/paper.css';
       document.getElementsByTagName( 'head' )[0].appendChild( link );
 
       var cwRevealConfig = {
@@ -41,7 +43,7 @@
           history: true,
           keyboard: true,
           overview: true,
-          center: true,
+          center: is_pdf ? false : true,
           touch: true,
           loop: false,
           rtl: false,

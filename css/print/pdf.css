@@ -15,6 +15,7 @@ body {
   padding: 0;
   float: none !important;
   overflow: visible;
+  background: #37444e
 }
 
 html {
@@ -57,6 +58,8 @@ ul, ol, div, p {
   width: auto !important;
   height: auto !important;
   overflow: hidden !important;
+  background: url('../../images/bg.png') repeat #f7f7f7;
+
 }
 .reveal .slides {
   position: static;
@@ -67,7 +70,7 @@ ul, ol, div, p {
   left: auto;
   top: auto;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: inherit0 !important;
 
   overflow: visible;
   display: block;
@@ -89,8 +92,6 @@ ul, ol, div, p {
   z-index: 1;
 
   page-break-after: always;
-  border-bottom: 10px solid #37444e;
-
 }
 
 .reveal .slides section {
@@ -114,6 +115,10 @@ ul, ol, div, p {
      -moz-transform: none !important;
       -ms-transform: none !important;
           transform: none !important;
+}
+
+.reveal .slides section{
+  padding-top: 50px !important;
 }
 
 .reveal section.stack {
